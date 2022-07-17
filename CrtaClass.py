@@ -48,12 +48,28 @@ class Crta:
         points = []
         for interval in ranges:
             prevPoint = interval[0]
+
+            #get value at point
             prevVal = surface.get_at(prevPoint)
-            actualRange = range(interval[0][0], interval[1][0])
-            if(interval[0][0] > interval[1][0]):
-                actualRange = reversed(range(interval[1][0], interval[0][0]))
+
+            #search by x or y
+            XsearchParams = (interval[0][0], interval[1][0])
+            YsearchParams = (interval[0][1], interval[1][1])
+
+            searchParams = XsearchParams
+            if k>1 or k<-1:
+                searchParams = YsearchParams
+
+            actualRange = range(*searchParams)
+
+            if(searchParams[0] > searchParams[1]):
+                actualRange = reversed(range(searchParams[1],searchParams[0]))
+
             for x in actualRange:
                 newPoint = (x, int(k*x+n))
+                if k>1 or k<-1:
+                    newPoint = (int((x-n)/k),x)
+
                 val = surface.get_at(newPoint)
                 if(val != prevVal):
                     prevVal = val
@@ -62,4 +78,5 @@ class Crta:
                     points.append(middle)
                     break
                 prevPoint = newPoint
+
         return points

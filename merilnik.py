@@ -1,5 +1,4 @@
 # Import the pygame module
-from cv2 import circle
 import pygame
 
 from Snop import Snop
