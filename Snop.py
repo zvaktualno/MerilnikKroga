@@ -19,16 +19,24 @@ class Snop:
         self.circle = None
         self.maxCircle = None
         self.minCircle = None
+        self.surfaceSize = surfaceSize
+
+    def setNumberOfLines(self, n):
+        self.lines = []
+        self.collisionPoints = []
+        for lineNum in range(n):
+            self.lines.append(
+                Crta(self.coordinate, int(360/n*lineNum), self.color, self.surfaceSize))
 
     def draw(self, surface):
-        # for line in self.lines:
-        #    line.draw(surface)
+        for line in self.lines:
+            line.draw(surface)
         for point in self.collisionPoints:
-            pygame.draw.circle(surface, pygame.Color(255, 0, 0), point, 5)
-        if self.circle is not None and self.maxCircle is not None and self.minCircle is not None:
+            pygame.draw.circle(surface, pygame.Color(0, 255, 0), point, 5)
+        '''if self.circle is not None and self.maxCircle is not None and self.minCircle is not None:
             pygame.draw.circle(surface, pygame.Color(
                 0, 0, 255), self.circle[1], self.circle[0], width=2)
-            '''pygame.draw.circle(surface, pygame.Color(
+            pygame.draw.circle(surface, pygame.Color(
                 0, 255, 255), self.maxCircle[1], self.maxCircle[0], width=2)
             pygame.draw.circle(surface, pygame.Color(
                 0, 255, 0), self.minCircle[1], self.minCircle[0], width=2)'''
