@@ -1,60 +1,61 @@
-from tkinter import N
 import pygame
 import math
-
-SCALE = 10000
-
+from Point import Point
 
 class Crta:
     def __init__(self, coordinate, angle, color, surfaceSize):
-        self.coordinate = (int(coordinate[0]), int(coordinate[1]))
+        self.coordinate = coordinate
         self.angle = angle/360*2*math.pi
         self.color = color
         sineVal = math.sin(self.angle)
         cosineVal = math.cos(self.angle)
         screenX, screenY = surfaceSize
 
+        #find one end
         scaleFactor = 1
-        x, y = self.coordinate
-        while(x > 1 and y > 100 and x < screenX-2 and y < screenY-2):
-            scaleFactor += 1
-            x = self.coordinate[0]-scaleFactor*cosineVal
-            y = self.coordinate[1]-scaleFactor*sineVal
+        self.c1 = coordinate
+        while(self.c1.x > 0 and self.c1.y > 100 and self.c1.x < screenX and self.c1.y < screenY):
+            scaleFactor+=1
+            self.c1 = coordinate - Point(scaleFactor*cosineVal,scaleFactor*sineVal)
+        scaleFactor-=1
+        self.c1 = coordinate - Point(scaleFactor*cosineVal,scaleFactor*sineVal)
 
-        self.c1 = (int(x), int(y))
-
+        #find the other end
         scaleFactor = 1
-        x, y = self.coordinate
-        while(x > 1 and y > 100 and x < screenX-2 and y < screenY-2):
-            scaleFactor += 1
-            x = self.coordinate[0]+scaleFactor*cosineVal
-            y = self.coordinate[1]+scaleFactor*sineVal
-        self.c2 = (int(x), int(y))
+        self.c2 = coordinate
+        while(self.c2.x > 0 and self.c2.y > 100 and self.c2.x < screenX and self.c2.y < screenY):
+            scaleFactor+=1
+            self.c2 = coordinate + Point(scaleFactor*cosineVal,scaleFactor*sineVal)
+        scaleFactor-=1
+        self.c2 = coordinate + Point(scaleFactor*cosineVal,scaleFactor*sineVal)
 
     def draw(self, surface):
-        pygame.draw.line(surface, self.color, self.c1, self.c2)
-        #pygame.draw.circle(surface, pygame.Color(0, 255, 0), self.c1, 4)
-        #pygame.draw.circle(surface, pygame.Color(0, 0, 255), self.c2, 4)
+        pygame.draw.line(surface, self.color, self.c1.get(), self.c2.get())
+        #pygame.draw.circle(surface, pygame.Color(0, 255, 0), self.c1.get(), 4)
+        #pygame.draw.circle(surface, pygame.Color(0, 0, 255), self.c2.get(), 4)
 
     def findEdge(self, surface):
-        k = 0
-        if self.c2[0] != self.c1[0]:
-            k = (self.c2[1]-self.c1[1])/(self.c2[0]-self.c1[0])
+        k = math.inf
+        diff = self.c2-self.c1
+        if diff.x != 0:
+            k = diff.y/diff.x
 
-        n = self.c1[1]-k*self.c1[0]
-
-        ranges = [(self.coordinate, self.c1), (self.coordinate, self.c2)]
+        n = self.c1.y-k*self.c1.x
+        insideOutRange = [(self.coordinate, self.c1), (self.coordinate, self.c2)]
+        outsideInRange = [(self.c1, self.coordinate), (self.c2, self.coordinate)]
+        ranges = insideOutRange
 
         points = []
         for interval in ranges:
             prevPoint = interval[0]
 
             #get value at point
-            prevVal = surface.get_at(prevPoint)
+            print(prevPoint)
+            prevVal = surface.get_at(prevPoint.get())
 
             #search by x or y
-            XsearchParams = (interval[0][0], interval[1][0])
-            YsearchParams = (interval[0][1], interval[1][1])
+            XsearchParams = (interval[0].x, interval[1].x)
+            YsearchParams = (interval[0].y, interval[1].y)
 
             searchParams = XsearchParams
             if k>1 or k<-1:
@@ -66,17 +67,26 @@ class Crta:
                 actualRange = reversed(range(searchParams[1],searchParams[0]))
 
             for x in actualRange:
-                newPoint = (x, int(k*x+n))
+                newPoint = None
                 if k>1 or k<-1:
-                    newPoint = (int((x-n)/k),x)
+                    if k == math.inf:
+                        newPoint = Point(interval[0].x, x)
+                    else:
+                        newPoint = Point((x-n)/k, x)
+                else:                
+                    newPoint = Point(x, k*x+n)
 
-                val = surface.get_at(newPoint)
+                val = surface.get_at(newPoint.get())
                 if(val != prevVal):
                     prevVal = val
-                    middle = ((prevPoint[0]+newPoint[0])/2,
-                              (prevPoint[1]+newPoint[1])/2)
-                    points.append(middle)
+                    middle = Point((prevPoint.x + newPoint.x)/2,
+                              (prevPoint.y + newPoint.y)/2)
+                    points.append(newPoint)
                     break
                 prevPoint = newPoint
-
+        if(len(points)<2):
+            return None
         return points
+
+    def __str__(self):
+        return "Middle point: {}, Start Point: {}, End Point:{}".format(str(self.coordinate),str(self.c1),str(self.c2))
